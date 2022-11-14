@@ -1,0 +1,118 @@
+#define LED 3
+#define BOMBA 12
+#define HUMEDAD A3
+#define PASOSY 4
+#define DIRECCIONY 7
+#define FINALDECARRERAY 11
+#define HABILITARMOTORES 8
+#define PASOSX 2
+#define DIRECCIONX 5
+#define FINALDECARRERAX 9
+const int  cm_MAXIMOEN_X = 200;
+const int cm_ENTRE_MACETA = 20;
+const int CANTIDAD_DE_MACETAS = cm_MAXIMOEN_X / cm_ENTRE_MACETA - 1;
+void setup()
+{
+  pinMode(BOMBA, OUTPUT);
+  digitalWrite(BOMBA, LOW); // PROTECCIÓN DE LA BOMBA
+  pinMode(HUMEDAD, INPUT);
+  //pinMode(LED, OUTPUT);
+  Serial.begin(9600);
+  pinMode(PASOSY, OUTPUT),
+          pinMode(DIRECCIONY, OUTPUT);
+  pinMode(FINALDECARRERAY, INPUT);
+  pinMode(HABILITARMOTORES, OUTPUT);
+  pinMode(PASOSX, OUTPUT),
+          pinMode(DIRECCIONX, OUTPUT);
+  pinMode(FINALDECARRERAX, INPUT);
+}
+void loop()
+{
+  HomeMotorY();
+  HomeMotorX();
+  for (int i = 0; i < CANTIDAD_DE_MACETAS; i++)
+  {
+    RecorridoMotorX(cm_ENTRE_MACETA);
+    BajarMotorY();
+    Regar();
+    HomeMotory();
+  }
+  HomeMotorX();
+  delay (1000 * 60 * 60 * 24);
+}
+void HomeMotorY()
+{
+  digitalWrite(DIRECCIONY, LOW);
+  while (digitalRead(FINALDECARRERAY) == 1)
+  {
+    digitalWrite(PASOSY, LOW);
+    delay(1);
+    digitalWrite(PASOSY, HIGH);
+    delay(1);
+  }
+}
+void BajarMotorY()
+{
+  const float  RECORRIDA_EN_CM = 500; // la palabra constante, me permite, MODIFICAR SOLO EN CASO QUE DEBA CAMBIARSE
+  const int    PASOS_A_CM = 10; //prestar atención con los nombres de las variables , llamarlas en mayúsculas
+  const int PASOS_A_BAJAR = PASOS_A_CM * RECORRIDA_EN_CM;
+  digitalWrite(DIRECCIONY, HIGH);
+  for (int i = 0; i < PASOS_A_BAJAR; i++)
+  {
+    digitalWrite (PASOSY, LOW);
+    delay (1);
+    digitalWrite (PASOSY, HIGH);
+    delay(1);
+  }
+}
+
+void HomeMotorX()
+{
+  digitalWrite(DIRECCIONX, LOW);
+  while (digitalRead(FINALDECARRERAX) == 1)
+  {
+    digitalWrite(PASOSX, HIGH);
+    delay(1);
+    digitalWrite(PASOSX, LOW);
+    delay(1);
+  }
+}
+
+void RecorridoMotorX(int cm_POR_MACETA)
+{
+  const int  PASOSENX_EN_CM = 200;
+  const int PASOS_POR_MACETAS = PASOSENX_EN_CM * cm_POR_MACETA;
+  digitalWrite(DIRECCIONX, HIGH);
+  for (int i = 0; i < PASOS_POR_MACETAS; i++)
+  {
+    digitalWrite (PASOSX, HIGH);
+    delay (1);
+    digitalWrite (PASOSX, LOW);
+    delay (1);
+  }
+  delay(1000);
+}
+}
+bool ChequearSeco()
+{
+  int HUMEDADOPTIMA = 279;
+  int LecturaDeHumedad = analogRead(HUMEDAD);
+
+  if ((LecturaDeHumedad < HUMEDADOPTIMA))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+  void Regar ()
+  {
+    while (ChequearSeco ());
+    {
+      digitalWrite (BOMBA, LOW);
+      delay(500);
+      digitalWrite (BOMBA, HIGH);
+      delay(5000);
+    }
+  }
